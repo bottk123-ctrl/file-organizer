@@ -1,0 +1,4 @@
+APP_NAME = "File Organizer"
+WINDOW_SIZE = "1000x650"
+APPEARANCE_MODE = "dark"
+COLOR_THEME = "blue"
