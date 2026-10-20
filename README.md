@@ -6,6 +6,20 @@
 ![CustomTkinter](https://img.shields.io/badge/UI-CustomTkinter-green)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
+## Скриншоты
+
+**Главное окно**
+
+![Главное окно](assets/screenshots/main.png)
+
+**До сортировки**
+
+![До сортировки](assets/screenshots/before.png)
+
+**После сортировки**
+
+![После сортировки](assets/screenshots/after.png)
+
 ## Возможности
 
 - Выбор папки через системный диалог
