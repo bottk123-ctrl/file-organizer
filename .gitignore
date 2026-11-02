@@ -11,6 +11,13 @@ build/
 dist/
 *.spec
 
+# Tests / lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
 # IDE
 .vscode/
 .idea/
@@ -19,3 +26,6 @@ dist/
 # OS
 Thumbs.db
 .DS_Store
+
+# Logs
+*.log
