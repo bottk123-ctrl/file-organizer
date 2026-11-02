@@ -88,6 +88,17 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## 🧪 Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+The tests cover the category rules in `core/rules.py` and the sorting, conflict
+resolution, and undo logic in `core/organizer.py`. They run automatically on every
+push and pull request through GitHub Actions.
+
 ## 🛠 Build a standalone .exe
 
 ```bash
@@ -106,9 +117,13 @@ file-organizer/
 ├── config.py                  # app settings (name, size, theme)
 ├── build.bat                  # .exe build script
 ├── requirements.txt           # runtime dependencies
-├── requirements-dev.txt       # build dependencies
+├── requirements-dev.txt       # build and test dependencies
+├── pyproject.toml             # pytest configuration
 ├── assets/
 │   └── screenshots/           # README screenshots
+├── tests/
+│   ├── test_organizer.py      # sorting, conflicts and undo
+│   └── test_rules.py          # category rules
 ├── ui/
 │   ├── __init__.py
 │   └── app.py                 # main window and action handling
