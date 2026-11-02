@@ -1,3 +1,5 @@
+import os
+
 CATEGORIES = {
     "Изображения": {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".ico"},
     "Документы": {".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt"},
@@ -17,9 +19,10 @@ CATEGORIES = {
 OTHER_CATEGORY = "Прочее"
 
 
-def get_category(filename):
-    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+def get_category(filename: str) -> str:
+    """Вернуть категорию файла по его расширению (без учёта регистра)."""
+    extension = os.path.splitext(filename)[1].lower()
     for category, extensions in CATEGORIES.items():
-        if ext in extensions:
+        if extension in extensions:
             return category
     return OTHER_CATEGORY
