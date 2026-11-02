@@ -65,6 +65,9 @@ Folder names are created as shown in parentheses.
 | **Code** (Код) | `.py`, `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `.html`, `.css`, `.java`, `.cpp`, `.c`, `.h`, `.cs`, `.go`, `.rs`, `.php`, `.xml`, `.yml`, `.yaml` |
 | **Fonts** (Шрифты) | `.ttf`, `.otf`, `.woff`, `.woff2` |
 | **Programs** (Программы) | `.exe`, `.msi`, `.apk`, `.deb`, `.dmg` |
+| **Design** (Дизайн) | `.psd`, `.ai`, `.xd`, `.fig`, `.sketch` |
+| **3D** (3D) | `.obj`, `.fbx`, `.stl`, `.blend`, `.3ds` |
+| **Databases** (Базы данных) | `.sql`, `.db`, `.sqlite`, `.sqlite3`, `.mdb` |
 | **Books** (Книги) | `.epub`, `.mobi`, `.fb2`, `.djvu` |
 | **Other** (Прочее) | every other extension |
 

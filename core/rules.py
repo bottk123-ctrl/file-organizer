@@ -13,6 +13,9 @@ CATEGORIES = {
     },
     "Шрифты": {".ttf", ".otf", ".woff", ".woff2"},
     "Программы": {".exe", ".msi", ".apk", ".deb", ".dmg"},
+    "Дизайн": {".psd", ".ai", ".xd", ".fig", ".sketch"},
+    "3D": {".obj", ".fbx", ".stl", ".blend", ".3ds"},
+    "Базы данных": {".sql", ".db", ".sqlite", ".sqlite3", ".mdb"},
     "Книги": {".epub", ".mobi", ".fb2", ".djvu"},
 }
 
