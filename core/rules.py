@@ -1,7 +1,7 @@
 CATEGORIES = {
     "Изображения": {
         ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".ico",
-        ".tif", ".tiff", ".heic", ".avif", ".raw", ".psd",
+        ".tif", ".tiff", ".heic", ".avif", ".raw",
     },
     "Документы": {
         ".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt", ".md", ".pages",
@@ -19,11 +19,14 @@ CATEGORIES = {
     "Код": {
         ".py", ".js", ".ts", ".jsx", ".tsx", ".json", ".html", ".css",
         ".scss", ".java", ".cpp", ".c", ".h", ".hpp", ".cs", ".go", ".rs",
-        ".php", ".rb", ".swift", ".kt", ".sql", ".sh", ".ps1", ".bat",
+        ".php", ".rb", ".swift", ".kt", ".sh", ".ps1", ".bat",
         ".xml", ".yml", ".yaml", ".toml", ".ini",
     },
     "Шрифты": {".ttf", ".otf", ".woff", ".woff2"},
     "Программы": {".exe", ".msi", ".apk", ".deb", ".dmg", ".appx"},
+    "Дизайн": {".psd", ".ai", ".xd", ".fig", ".sketch"},
+    "3D": {".obj", ".fbx", ".stl", ".blend", ".3ds"},
+    "Базы данных": {".sql", ".db", ".sqlite", ".sqlite3", ".mdb"},
     "Книги": {".epub", ".mobi", ".fb2", ".djvu", ".azw3"},
 }
 
@@ -36,7 +39,7 @@ IGNORED_SUFFIXES = (".tmp", ".temp", ".crdownload", ".part", ".partial")
 
 
 def get_extension(filename):
-    """Возвращает расширение в нижнем регистре, включая точку ('' если его нет)."""
+    """Вернуть расширение в нижнем регистре, включая точку ('' если его нет)."""
     base = filename.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
     stem, dot, ext = base.rpartition(".")
     # Для .gitignore расширения нет: точка в начале имени не считается.
@@ -55,9 +58,10 @@ def is_ignored(filename):
     return name.endswith(IGNORED_SUFFIXES)
 
 
-def get_category(filename):
-    ext = get_extension(filename)
+def get_category(filename: str) -> str:
+    """Вернуть категорию файла по его расширению (без учёта регистра)."""
+    extension = get_extension(filename)
     for category, extensions in CATEGORIES.items():
-        if ext in extensions:
+        if extension in extensions:
             return category
     return OTHER_CATEGORY

@@ -1,131 +1,160 @@
-# File Organizer
+# 🗂 File Organizer
 
-Десктопное приложение на Python для автоматической сортировки файлов по категориям. Выберите папку — программа разложит файлы по подпапкам.
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![CustomTkinter](https://img.shields.io/badge/UI-CustomTkinter-1f6feb)](https://github.com/TomSchimansky/CustomTkinter)
+[![PyInstaller](https://img.shields.io/badge/Build-PyInstaller-2b2b2b)](https://pyinstaller.org/)
+[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/bottk123-ctrl/file-organizer/actions/workflows/ci.yml/badge.svg)](https://github.com/bottk123-ctrl/file-organizer/actions/workflows/ci.yml)
 
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![CustomTkinter](https://img.shields.io/badge/UI-CustomTkinter-green)
-![Platform](https://img.shields.io/badge/Platform-Windows-0078D6)
-![License](https://img.shields.io/badge/License-MIT-lightgrey)
-![Tests](https://github.com/bottk123-ctrl/file-organizer/actions/workflows/tests.yml/badge.svg)
+A Python desktop app that automatically sorts files into categories. Pick a
+folder and the app files everything into subfolders — with a **preview** before it
+touches anything and a one-click **undo**.
 
-## Скриншоты
+## 📸 Screenshots
 
-**Главное окно**
+**Main window**
 
-![Главное окно](assets/screenshots/main.png)
+![Main window](assets/screenshots/main.png)
 
-**До сортировки**
+**Before sorting**
 
-![До сортировки](assets/screenshots/before.png)
+![Before sorting](assets/screenshots/before.png)
 
-**После сортировки**
+**After sorting**
 
-![После сортировки](assets/screenshots/after.png)
+![After sorting](assets/screenshots/after.png)
 
-## Возможности
+## ✨ Features
 
-- Выбор папки через системный диалог
-- **Предпросмотр** — список планируемых перемещений (`файл → категория`) и сводка по категориям до внесения изменений
-- **Отмена** — откат последней сортировки: файлы возвращаются на исходные места, а созданные пустые подпапки удаляются. Если часть файлов вернуть не удалось (например, заняты), отмену можно повторить
-- **Открыть папку** — быстрый переход к выбранной папке в Проводнике
-- Автоматическая сортировка файлов по категориям (см. [Категории](#категории))
-- Подпапки создаются автоматически
-- Служебные и временные файлы (`desktop.ini`, `Thumbs.db`, `~$*.docx`, `*.crdownload`, `*.part`, `*.tmp`) не трогаются
-- Разрешение конфликтов имён: при совпадении добавляется суффикс `имя (1).ext`
-- Обработка ошибок: занятые файлы и проблемы доступа не «роняют» приложение
-- Тёмная тема оформления (синий акцент)
+- Folder picker via the native system dialog.
+- **Preview** — a list of planned moves (`file → category`) plus a per-category
+  summary before anything changes.
+- **Undo** — reverts the last sort: files go back to their original locations and
+  empty folders created by the app are removed. If some files could not be moved
+  back (for example, they are locked), undo can be retried.
+- **Open folder** — jump straight to the selected folder in Explorer.
+- Automatic sorting of files into categories (see [Categories](#-categories)).
+- Category subfolders are created automatically.
+- Service and temporary files (`desktop.ini`, `Thumbs.db`, `~$*.docx`,
+  `*.crdownload`, `*.part`, `*.tmp`) are left alone.
+- Name-conflict resolution: a `name (1).ext` suffix is added on collision.
+- Error handling: locked files and access issues never crash the app.
+- Dark theme with a blue accent.
 
-> **Важно:** отмена доступна только для **последней** операции и хранится в памяти.
-> После закрытия приложения история откатов недоступна.
+> **Note:** undo is available only for the **last** operation and is kept in
+> memory. After closing the app, the undo history is gone.
 
-## Как это работает
+## ⚙️ How it works
 
-1. Вы выбираете папку через диалог.
-2. **Предпросмотр** строит план: приложение сканирует файлы в корне папки и сопоставляет расширение с категорией.
-3. **Сортировать файлы** применяет план: файлы перемещаются в подпапки категорий.
-4. **Отменить** возвращает файлы последней операции на исходные места.
+1. You pick a folder through the dialog.
+2. **Preview** builds the plan: the app scans the files in the folder root and maps
+   each extension to a category.
+3. **Sort files** applies the plan: files are moved into the category subfolders.
+4. **Undo** returns the files from the last operation to their original locations.
 
-Сканируются только файлы в корне выбранной папки — уже существующие подпапки не затрагиваются.
+Only files in the root of the selected folder are scanned — existing subfolders are
+left untouched.
 
-## Категории
+## 🗂 Categories
 
-| Категория | Расширения |
-|-----------|------------|
-| **Изображения** | `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`, `.svg`, `.ico`, `.tif`, `.tiff`, `.heic`, `.avif`, `.raw`, `.psd` |
-| **Документы** | `.pdf`, `.docx`, `.doc`, `.txt`, `.rtf`, `.odt`, `.md`, `.pages`, `.tex` |
-| **Таблицы** | `.xlsx`, `.xls`, `.csv`, `.ods`, `.tsv`, `.numbers` |
-| **Презентации** | `.pptx`, `.ppt`, `.odp`, `.key` |
-| **Видео** | `.mp4`, `.avi`, `.mkv`, `.mov`, `.wmv`, `.webm`, `.flv`, `.m4v` |
-| **Аудио** | `.mp3`, `.wav`, `.flac`, `.aac`, `.ogg`, `.m4a`, `.wma`, `.opus` |
-| **Архивы** | `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.bz2`, `.xz` |
-| **Код** | `.py`, `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `.html`, `.css`, `.scss`, `.java`, `.cpp`, `.c`, `.h`, `.hpp`, `.cs`, `.go`, `.rs`, `.php`, `.rb`, `.swift`, `.kt`, `.sql`, `.sh`, `.ps1`, `.bat`, `.xml`, `.yml`, `.yaml`, `.toml`, `.ini` |
-| **Шрифты** | `.ttf`, `.otf`, `.woff`, `.woff2` |
-| **Программы** | `.exe`, `.msi`, `.apk`, `.deb`, `.dmg`, `.appx` |
-| **Книги** | `.epub`, `.mobi`, `.fb2`, `.djvu`, `.azw3` |
-| **Прочее** | все остальные расширения |
+Folder names are created as shown in parentheses.
 
-Список категорий и расширений настраивается в `core/rules.py`.
+| Category | Extensions |
+|----------|------------|
+| **Images** (Изображения) | `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`, `.svg`, `.ico`, `.tif`, `.tiff`, `.heic`, `.avif`, `.raw` |
+| **Documents** (Документы) | `.pdf`, `.docx`, `.doc`, `.txt`, `.rtf`, `.odt`, `.md`, `.pages`, `.tex` |
+| **Spreadsheets** (Таблицы) | `.xlsx`, `.xls`, `.csv`, `.ods`, `.tsv`, `.numbers` |
+| **Presentations** (Презентации) | `.pptx`, `.ppt`, `.odp`, `.key` |
+| **Video** (Видео) | `.mp4`, `.avi`, `.mkv`, `.mov`, `.wmv`, `.webm`, `.flv`, `.m4v` |
+| **Audio** (Аудио) | `.mp3`, `.wav`, `.flac`, `.aac`, `.ogg`, `.m4a`, `.wma`, `.opus` |
+| **Archives** (Архивы) | `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.bz2`, `.xz` |
+| **Code** (Код) | `.py`, `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `.html`, `.css`, `.scss`, `.java`, `.cpp`, `.c`, `.h`, `.hpp`, `.cs`, `.go`, `.rs`, `.php`, `.rb`, `.swift`, `.kt`, `.sh`, `.ps1`, `.bat`, `.xml`, `.yml`, `.yaml`, `.toml`, `.ini` |
+| **Fonts** (Шрифты) | `.ttf`, `.otf`, `.woff`, `.woff2` |
+| **Programs** (Программы) | `.exe`, `.msi`, `.apk`, `.deb`, `.dmg`, `.appx` |
+| **Design** (Дизайн) | `.psd`, `.ai`, `.xd`, `.fig`, `.sketch` |
+| **3D** (3D) | `.obj`, `.fbx`, `.stl`, `.blend`, `.3ds` |
+| **Databases** (Базы данных) | `.sql`, `.db`, `.sqlite`, `.sqlite3`, `.mdb` |
+| **Books** (Книги) | `.epub`, `.mobi`, `.fb2`, `.djvu`, `.azw3` |
+| **Other** (Прочее) | every other extension |
 
-## Стек
+The category list and extensions are configurable in `core/rules.py`.
+
+## 🧰 Tech stack
 
 - Python 3.11
 - [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) (>= 5.2.0)
-- PyInstaller (>= 6.0) — сборка `.exe`
+- PyInstaller (>= 6.0) — `.exe` build
 
-## Требования
+## 🧩 Requirements
 
-- Windows (сборка и запуск `.exe` ориентированы на Windows)
-- Python 3.11 для запуска из исходников
+- Windows (the build and `.exe` are Windows-oriented)
+- Python 3.11 to run from source
 
-## Запуск из исходников
+## ▶ Run from source
 
 ```bash
 pip install -r requirements.txt
 python main.py
 ```
 
-## Тесты
+## 🧪 Tests
 
 ```bash
 pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-Тесты покрывают разбор расширений, построение плана, перенос файлов, конфликты имён и отмену. CI прогоняет их на Windows при каждом пуше и пул-реквесте.
+The tests cover the category rules in `core/rules.py` and the sorting, service-file
+skipping, conflict resolution, and undo logic in `core/organizer.py`. They run
+automatically on every push and pull request through GitHub Actions.
 
-## Сборка .exe
+## 🛠 Build a standalone .exe
 
 ```bash
 build.bat
 ```
 
-Скрипт устанавливает зависимости из `requirements-dev.txt` и собирает приложение через PyInstaller в режиме `--onefile --windowed` с `--collect-all customtkinter`. Готовый файл появится в `dist\FileOrganizer.exe`.
+The script installs dependencies from `requirements-dev.txt` and builds the app
+with PyInstaller in `--onefile --windowed` mode with `--collect-all customtkinter`.
+The result appears at `dist\FileOrganizer.exe`.
 
-## Структура проекта
+## 🏗 Project structure
 
 ```
 file-organizer/
-├── main.py                    # точка входа
-├── config.py                  # настройки приложения (название, размер, тема)
-├── build.bat                  # сборка .exe
-├── FileOrganizer.spec         # спецификация PyInstaller
-├── requirements.txt           # зависимости приложения
-├── requirements-dev.txt       # зависимости для сборки
+├── main.py                    # entry point
+├── config.py                  # app settings (name, size, theme)
+├── build.bat                  # .exe build script
+├── requirements.txt           # runtime dependencies
+├── requirements-dev.txt       # build and test dependencies
+├── pyproject.toml             # pytest configuration
 ├── assets/
-│   └── screenshots/           # скриншоты для README
-├── tests/                     # pytest-тесты ядра
-├── .github/workflows/         # CI: запуск тестов
+│   └── screenshots/           # README screenshots
+├── tests/
+│   ├── test_organizer.py      # sorting, conflicts and undo
+│   └── test_rules.py          # category rules
 ├── ui/
 │   ├── __init__.py
-│   └── app.py                 # главное окно и обработка действий
+│   └── app.py                 # main window and action handling
 └── core/
     ├── __init__.py
-    ├── organizer.py           # логика сортировки, предпросмотра и отмены
-    └── rules.py               # категории, расширения и служебные файлы
+    ├── organizer.py           # sorting, preview, and undo logic
+    └── rules.py               # categories, extensions and service files
 ```
 
-Папки `build/` и `dist/` создаются PyInstaller автоматически.
+The `build/` and `dist/` folders are created by PyInstaller automatically.
 
-## Лицензия
+## 📜 License
 
-MIT — см. [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
+
+---
+
+## 📫 Contact
+
+Open to freelance work and collaborations.
+
+- Email: **bottikt123@gmail.com**
+- GitHub: [@bottk123-ctrl](https://github.com/bottk123-ctrl)
+- Portfolio: [github.com/bottk123-ctrl/portfolio](https://github.com/bottk123-ctrl/portfolio)
