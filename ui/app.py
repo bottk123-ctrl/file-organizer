@@ -9,9 +9,12 @@ from core.organizer import plan_sort, apply_plan, undo_sort
 
 class App(ctk.CTk):
     def __init__(self):
+        ctk.set_appearance_mode(config.APPEARANCE_MODE)
+        ctk.set_default_color_theme(config.COLOR_THEME)
         super().__init__()
         self.title(config.APP_NAME)
         self.geometry(config.WINDOW_SIZE)
+        self.minsize(820, 560)
 
         self.last_result = None
         self._build()
@@ -67,6 +70,16 @@ class App(ctk.CTk):
         )
         self.undo_button.pack(side="left", padx=5)
 
+        self.open_button = ctk.CTkButton(
+            self.button_frame,
+            text="Открыть папку",
+            command=self.open_folder,
+            state="disabled",
+            fg_color="transparent",
+            border_width=1,
+        )
+        self.open_button.pack(side="left", padx=5)
+
         self.preview_box = ctk.CTkTextbox(self, width=760, height=220, activate_scrollbars=True)
         self.preview_box.pack(pady=10)
         self.preview_box.insert("1.0", "Предпросмотр появится здесь.")
@@ -82,10 +95,21 @@ class App(ctk.CTk):
             self.path_field.insert(0, folder)
             self.preview_button.configure(state="normal")
             self.sort_button.configure(state="normal")
+            self.open_button.configure(state="normal")
             self.undo_button.configure(state="disabled")
             self.last_result = None
             self.status_label.configure(text="")
             self._set_preview("")
+
+    def open_folder(self):
+        folder = self.path_field.get().strip()
+        if not folder or not os.path.isdir(folder):
+            messagebox.showwarning(config.APP_NAME, "Папка не найдена.")
+            return
+        try:
+            os.startfile(folder)  # noqa: S606 — Windows-only приложение
+        except OSError as exc:
+            messagebox.showerror(config.APP_NAME, f"Не удалось открыть папку:\n{exc}")
 
     def _set_preview(self, text):
         self.preview_box.configure(state="normal")
@@ -93,20 +117,25 @@ class App(ctk.CTk):
         self.preview_box.insert("1.0", text)
         self.preview_box.configure(state="disabled")
 
-    def preview_files(self):
+    def _read_folder(self):
         folder = self.path_field.get().strip()
         if not folder:
             messagebox.showwarning(config.APP_NAME, "Сначала выберите папку.")
+            return None
+        return folder
+
+    def preview_files(self):
+        folder = self._read_folder()
+        if folder is None:
             return
 
         plan = plan_sort(folder)
 
         if plan.moves:
-            lines = [
+            preview = "\n".join(
                 f"{os.path.basename(src)}  →  {os.path.basename(os.path.dirname(dst))}"
                 for src, dst in plan.moves
-            ]
-            preview = "\n".join(lines)
+            )
         else:
             preview = "Нет файлов для перемещения."
 
@@ -115,12 +144,11 @@ class App(ctk.CTk):
 
         self._set_preview(preview)
         self.status_label.configure(text=plan.summary())
-        self.undo_button.configure(state="disabled")
+        self.undo_button.configure(state="normal" if self.last_result else "disabled")
 
     def sort_files(self):
-        folder = self.path_field.get().strip()
-        if not folder:
-            messagebox.showwarning(config.APP_NAME, "Сначала выберите папку.")
+        folder = self._read_folder()
+        if folder is None:
             return
 
         try:
@@ -158,15 +186,16 @@ class App(ctk.CTk):
             messagebox.showerror(config.APP_NAME, f"Непредвиденная ошибка:\n{exc}")
             return
 
-        self.last_result = None
-        self.undo_button.configure(state="disabled")
+        # Если часть файлов вернуть не удалось, отмена остаётся доступной для повтора.
+        if self.last_result.moved_paths:
+            self.undo_button.configure(state="normal")
+        else:
+            self.last_result = None
+            self.undo_button.configure(state="disabled")
+
         self._set_preview("")
         self.status_label.configure(text=undo.summary())
         if undo.errors:
             messagebox.showwarning(config.APP_NAME, undo.summary())
         else:
             messagebox.showinfo(config.APP_NAME, undo.summary())
-
-
-if __name__ == "__main__":
-    App().mainloop()
