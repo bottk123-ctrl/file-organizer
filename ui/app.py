@@ -4,7 +4,8 @@ import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
 import config
-from core.organizer import plan_sort, apply_plan, undo_sort
+from core.history import clear_history, load_history, save_history
+from core.organizer import SortResult, plan_sort, apply_plan, undo_sort
 
 
 class App(ctk.CTk):
@@ -12,11 +13,13 @@ class App(ctk.CTk):
         ctk.set_appearance_mode(config.APPEARANCE_MODE)
         ctk.set_default_color_theme(config.COLOR_THEME)
         super().__init__()
-        self.title(config.APP_NAME)
+        self.title(f"{config.APP_NAME} {config.VERSION}")
         self.geometry(config.WINDOW_SIZE)
         self.minsize(820, 560)
 
-        self.last_result = None
+        # Отмена доступна и после перезапуска: история последней сортировки хранится на диске.
+        saved_pairs = load_history()
+        self.last_result = SortResult.from_paths(saved_pairs) if saved_pairs else None
         self._build()
 
     def _build(self):
@@ -64,7 +67,7 @@ class App(ctk.CTk):
             self.button_frame,
             text="Отменить",
             command=self.undo_files,
-            state="disabled",
+            state="normal" if self.last_result else "disabled",
             fg_color="#8a4b1f",
             hover_color="#6d3b18",
         )
@@ -96,8 +99,8 @@ class App(ctk.CTk):
             self.preview_button.configure(state="normal")
             self.sort_button.configure(state="normal")
             self.open_button.configure(state="normal")
-            self.undo_button.configure(state="disabled")
-            self.last_result = None
+            # Отмена предыдущей сортировки остаётся доступной и для другой папки.
+            self.undo_button.configure(state="normal" if self.last_result else "disabled")
             self.status_label.configure(text="")
             self._set_preview("")
 
@@ -107,7 +110,9 @@ class App(ctk.CTk):
             messagebox.showwarning(config.APP_NAME, "Папка не найдена.")
             return
         try:
-            os.startfile(folder)  # noqa: S606 — Windows-only приложение
+            os.startfile(folder)  # Windows-специфичный вызов: открывает Проводник
+        except AttributeError:
+            messagebox.showwarning(config.APP_NAME, "Открытие папки поддерживается только в Windows.")
         except OSError as exc:
             messagebox.showerror(config.APP_NAME, f"Не удалось открыть папку:\n{exc}")
 
@@ -159,6 +164,8 @@ class App(ctk.CTk):
             return
 
         self.last_result = result if result.moved_paths else None
+        if self.last_result:
+            save_history(result.moved_paths)
         self.undo_button.configure(state="normal" if self.last_result else "disabled")
 
         self._set_preview(self._result_preview(result))
@@ -188,9 +195,11 @@ class App(ctk.CTk):
 
         # Если часть файлов вернуть не удалось, отмена остаётся доступной для повтора.
         if self.last_result.moved_paths:
+            save_history(self.last_result.moved_paths)
             self.undo_button.configure(state="normal")
         else:
             self.last_result = None
+            clear_history()
             self.undo_button.configure(state="disabled")
 
         self._set_preview("")

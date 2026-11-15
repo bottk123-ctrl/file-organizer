@@ -37,6 +37,14 @@ class SortResult:
         self.errors = []
         self.moved_paths = []
 
+    @classmethod
+    def from_paths(cls, moved_paths):
+        """Восстановить результат по парам (откуда, куда) из сохранённой истории."""
+        result = cls()
+        result.moved_paths = list(moved_paths)
+        result.moved = len(result.moved_paths)
+        return result
+
     def summary(self):
         text = f"Перемещено файлов: {self.moved}\nПропущено: {self.skipped}"
         if self.ignored:

@@ -32,7 +32,10 @@ touches anything and a one-click **undo**.
   summary before anything changes.
 - **Undo** — reverts the last sort: files go back to their original locations and
   empty folders created by the app are removed. If some files could not be moved
-  back (for example, they are locked), undo can be retried.
+  back (for example, they are locked), undo can be retried. The last sort is also
+  remembered after a restart.
+- **Command line mode** — sort, preview or undo a folder without opening a window
+  (see [Command line](#-command-line)).
 - **Open folder** — jump straight to the selected folder in Explorer.
 - Automatic sorting of files into categories (see [Categories](#-categories)).
 - Category subfolders are created automatically.
@@ -42,8 +45,9 @@ touches anything and a one-click **undo**.
 - Error handling: locked files and access issues never crash the app.
 - Dark theme with a blue accent.
 
-> **Note:** undo is available only for the **last** operation and is kept in
-> memory. After closing the app, the undo history is gone.
+> **Note:** only the **last** operation can be undone. Its history is kept in
+> `%LOCALAPPDATA%\FileOrganizer\last-sort.json`, so undo still works after the app
+> is restarted.
 
 ## ⚙️ How it works
 
@@ -98,6 +102,19 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## 🖥 Command line
+
+The same logic works without the GUI — handy for scripts and task scheduler:
+
+```bash
+python main.py --folder "C:\Downloads" --dry-run   # показать план
+python main.py --folder "C:\Downloads"             # спросить подтверждение
+python main.py --folder "C:\Downloads" --yes       # переместить сразу
+python main.py --undo                              # отменить последнюю сортировку
+```
+
+Exit code `0` means success, `1` means an error or a failed undo.
+
 ## 🧪 Tests
 
 ```bash
@@ -132,6 +149,8 @@ file-organizer/
 ├── assets/
 │   └── screenshots/           # README screenshots
 ├── tests/
+│   ├── test_cli.py            # command line mode
+│   ├── test_history.py        # saved undo history
 │   ├── test_organizer.py      # sorting, conflicts and undo
 │   └── test_rules.py          # category rules
 ├── ui/
@@ -139,11 +158,18 @@ file-organizer/
 │   └── app.py                 # main window and action handling
 └── core/
     ├── __init__.py
+    ├── history.py             # last-sort history for undo
     ├── organizer.py           # sorting, preview, and undo logic
     └── rules.py               # categories, extensions and service files
 ```
 
 The `build/` and `dist/` folders are created by PyInstaller automatically.
+
+## 📦 Data files
+
+The app stores its data in `%LOCALAPPDATA%\FileOrganizer`
+(`last-sort.json` with the last operation). Override the location with the
+`FILE_ORGANIZER_DATA_DIR` environment variable.
 
 ## 📜 License
 
