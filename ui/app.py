@@ -1,4 +1,6 @@
 import os
+import queue
+import threading
 
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
@@ -20,6 +22,8 @@ class App(ctk.CTk):
         # Отмена доступна и после перезапуска: история последней сортировки хранится на диске.
         saved_pairs = load_history()
         self.last_result = SortResult.from_paths(saved_pairs) if saved_pairs else None
+        # Долгая сортировка идёт в отдельном потоке, прогресс передаётся через очередь.
+        self._progress_queue = queue.Queue()
         self._build()
 
     def _build(self):
@@ -151,22 +155,67 @@ class App(ctk.CTk):
         self.status_label.configure(text=plan.summary())
         self.undo_button.configure(state="normal" if self.last_result else "disabled")
 
+    def _set_busy(self, busy):
+        """На время сортировки блокируем кнопки, чтобы не запустить её дважды."""
+        has_folder = bool(self.path_field.get().strip())
+        active = "normal" if has_folder and not busy else "disabled"
+        self.choose_button.configure(state="disabled" if busy else "normal")
+        self.preview_button.configure(state=active)
+        self.sort_button.configure(state=active)
+        self.open_button.configure(state=active)
+        self.undo_button.configure(
+            state="normal" if self.last_result and not busy else "disabled"
+        )
+
     def sort_files(self):
         folder = self._read_folder()
         if folder is None:
             return
 
+        self._set_busy(True)
+        self.status_label.configure(text="Сортировка...")
+        threading.Thread(target=self._sort_worker, args=(folder,), daemon=True).start()
+        self.after(100, self._poll_progress)
+
+    def _sort_worker(self, folder):
         try:
             plan = plan_sort(folder)
-            result = apply_plan(plan)
-        except Exception as exc:
-            messagebox.showerror(config.APP_NAME, f"Непредвиденная ошибка:\n{exc}")
+            result = apply_plan(plan, on_progress=self._queue_progress)
+        except Exception as exc:  # noqa: BLE001 - показываем пользователю любую ошибку
+            self._progress_queue.put(("error", exc))
             return
+        self._progress_queue.put(("done", result))
 
+    def _queue_progress(self, done, total, source):
+        self._progress_queue.put(("progress", (done, total, source)))
+
+    def _poll_progress(self):
+        finished = False
+        try:
+            while True:
+                kind, payload = self._progress_queue.get_nowait()
+                if kind == "progress":
+                    done, total, source = payload
+                    self.status_label.configure(
+                        text=f"Сортировка: {done} из {total} — {os.path.basename(source)}"
+                    )
+                elif kind == "done":
+                    finished = True
+                    self._sort_done(payload)
+                else:
+                    finished = True
+                    self._sort_failed(payload)
+        except queue.Empty:
+            pass
+
+        if not finished:
+            self.after(100, self._poll_progress)
+
+    def _sort_done(self, result):
         self.last_result = result if result.moved_paths else None
         if self.last_result:
             save_history(result.moved_paths)
-        self.undo_button.configure(state="normal" if self.last_result else "disabled")
+        self._set_busy(False)
 
         self._set_preview(self._result_preview(result))
         self.status_label.configure(text=result.summary())
@@ -174,6 +223,11 @@ class App(ctk.CTk):
             messagebox.showwarning(config.APP_NAME, result.summary())
         else:
             messagebox.showinfo(config.APP_NAME, result.summary())
+
+    def _sort_failed(self, exc):
+        self._set_busy(False)
+        self.status_label.configure(text="")
+        messagebox.showerror(config.APP_NAME, f"Непредвиденная ошибка:\n{exc}")
 
     def _result_preview(self, result):
         if result.moved_paths:

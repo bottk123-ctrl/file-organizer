@@ -97,16 +97,25 @@ def plan_sort(folder):
     return plan
 
 
-def apply_plan(plan):
+def apply_plan(plan, on_progress=None):
+    """Переместить файлы по плану.
+
+    on_progress(done, total, source) вызывается после каждой попытки перемещения,
+    чтобы интерфейс мог показывать прогресс на больших папках.
+    """
     result = SortResult()
     result.skipped = plan.skipped
     result.ignored = plan.ignored
     result.errors.extend(plan.errors)
 
-    for source, destination in plan.moves:
+    total = len(plan.moves)
+    for done, (source, destination) in enumerate(plan.moves, start=1):
         target_dir = os.path.dirname(destination)
         try:
             os.makedirs(target_dir, exist_ok=True)
+            # Пока план ждал подтверждения, в целевой папке мог появиться такой же файл.
+            if os.path.exists(destination):
+                destination = unique_destination(target_dir, os.path.basename(destination))
             shutil.move(source, destination)
             result.moved += 1
             result.moved_paths.append((source, destination))
@@ -114,6 +123,8 @@ def apply_plan(plan):
             result.errors.append(f"{os.path.basename(source)}: файл занят другим процессом")
         except OSError as exc:
             result.errors.append(f"{os.path.basename(source)}: {exc}")
+        if on_progress is not None:
+            on_progress(done, total, source)
 
     return result
 

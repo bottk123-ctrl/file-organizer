@@ -1,5 +1,5 @@
 APP_NAME = "File Organizer"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 WINDOW_SIZE = "1000x650"
 APPEARANCE_MODE = "dark"
 COLOR_THEME = "blue"

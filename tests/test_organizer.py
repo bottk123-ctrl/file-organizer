@@ -151,3 +151,28 @@ def test_empty_result_has_no_moves():
 
     assert result.moved == 0
     assert result.errors == []
+
+
+def test_apply_plan_reports_progress(tmp_path):
+    _write_file(tmp_path, "photo.jpg")
+    _write_file(tmp_path, "song.mp3")
+    plan = plan_sort(str(tmp_path))
+    calls = []
+
+    apply_plan(plan, on_progress=lambda done, total, source: calls.append((done, total)))
+
+    assert calls == [(1, 2), (2, 2)]
+
+
+def test_apply_plan_avoids_conflict_created_after_planning(tmp_path):
+    _write_file(tmp_path, "photo.jpg", "новый")
+    plan = plan_sort(str(tmp_path))
+    # Пока план ждал подтверждения, в целевой папке появился одноимённый файл.
+    os.makedirs(tmp_path / "Изображения")
+    _write_file(tmp_path / "Изображения", "photo.jpg", "старый")
+
+    result = apply_plan(plan)
+
+    assert result.moved == 1
+    assert (tmp_path / "Изображения" / "photo.jpg").read_text(encoding="utf-8") == "старый"
+    assert (tmp_path / "Изображения" / "photo (1).jpg").read_text(encoding="utf-8") == "новый"
