@@ -1,6 +1,15 @@
 import pytest
 
-from core.rules import CATEGORIES, OTHER_CATEGORY, get_category, get_extension, is_ignored
+import json
+
+from core.rules import (
+    CATEGORIES,
+    OTHER_CATEGORY,
+    build_lookup,
+    get_category,
+    get_extension,
+    is_ignored,
+)
 
 
 @pytest.mark.parametrize(
@@ -64,3 +73,57 @@ def test_ignored_files(name):
 @pytest.mark.parametrize("name", ["photo.jpg", "~notes.txt"])
 def test_regular_files_are_not_ignored(name):
     assert not is_ignored(name)
+
+
+def test_custom_categories_extend_defaults(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    data.mkdir()
+    monkeypatch.setenv("FILE_ORGANIZER_DATA_DIR", str(data))
+    (data / "categories.json").write_text(
+        json.dumps({"Музыка": [".flp"], "Книги": [".cbr"]}), encoding="utf-8"
+    )
+
+    lookup = build_lookup()
+
+    assert get_category("beat.flp", lookup) == "Музыка"
+    assert get_category("comix.cbr", lookup) == "Книги"
+    assert get_category("photo.jpg", lookup) == "Изображения"
+
+
+def test_custom_categories_can_override_defaults(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    data.mkdir()
+    monkeypatch.setenv("FILE_ORGANIZER_DATA_DIR", str(data))
+    (data / "categories.json").write_text(
+        json.dumps({"Мои картинки": [".jpg", ".png"]}), encoding="utf-8"
+    )
+
+    lookup = build_lookup()
+
+    assert get_category("photo.jpg", lookup) == "Мои картинки"
+
+
+def test_broken_custom_categories_are_ignored(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    data.mkdir()
+    monkeypatch.setenv("FILE_ORGANIZER_DATA_DIR", str(data))
+    (data / "categories.json").write_text("{ это не json", encoding="utf-8")
+
+    assert get_category("photo.jpg") == "Изображения"
+    assert get_category("unknown.xyz") == OTHER_CATEGORY
+
+
+def test_custom_categories_without_valid_extensions_are_skipped(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    data.mkdir()
+    monkeypatch.setenv("FILE_ORGANIZER_DATA_DIR", str(data))
+    (data / "categories.json").write_text(
+        json.dumps({"Пустые": [], "Мусор": "не список", "Годные": [".zzz"]}),
+        encoding="utf-8",
+    )
+
+    lookup = build_lookup()
+
+    assert ".zzz" in lookup
+    assert "Годные" not in lookup  # карта хранит расширения, а не категории
+    assert ".bin" not in lookup

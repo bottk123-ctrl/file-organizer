@@ -1,3 +1,4 @@
+import json
 import os
 
 from core.organizer import SortResult, apply_plan, plan_sort, sort_folder, undo_sort
@@ -176,3 +177,19 @@ def test_apply_plan_avoids_conflict_created_after_planning(tmp_path):
     assert result.moved == 1
     assert (tmp_path / "Изображения" / "photo.jpg").read_text(encoding="utf-8") == "старый"
     assert (tmp_path / "Изображения" / "photo (1).jpg").read_text(encoding="utf-8") == "новый"
+
+
+def test_custom_categories_are_applied_in_plan(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    data.mkdir()
+    monkeypatch.setenv("FILE_ORGANIZER_DATA_DIR", str(data))
+    (data / "categories.json").write_text(
+        json.dumps({"Заметки": [".note"]}), encoding="utf-8"
+    )
+    _write_file(tmp_path, "idea.note")
+
+    plan = plan_sort(str(tmp_path))
+
+    assert plan.moves == [
+        (str(tmp_path / "idea.note"), str(tmp_path / "Заметки" / "idea.note"))
+    ]

@@ -1,3 +1,8 @@
+import json
+import os
+
+from core.history import data_dir
+
 CATEGORIES = {
     "Изображения": {
         ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".ico",
@@ -32,6 +37,8 @@ CATEGORIES = {
 
 OTHER_CATEGORY = "Прочее"
 
+CUSTOM_RULES_FILENAME = "categories.json"
+
 # Служебные файлы, которые сортировать бессмысленно.
 IGNORED_NAMES = {"desktop.ini", "thumbs.db", ".ds_store"}
 IGNORED_PREFIXES = ("~$",)
@@ -58,10 +65,50 @@ def is_ignored(filename):
     return name.endswith(IGNORED_SUFFIXES)
 
 
-def get_category(filename: str) -> str:
-    """Вернуть категорию файла по его расширению (без учёта регистра)."""
-    extension = get_extension(filename)
+def load_custom_categories(path=None):
+    """Прочитать пользовательские категории: {"Категория": [".ext", ...]}.
+
+    Файл лежит рядом с историей (categories.json). Битый или пустой файл —
+    просто работаем со стандартными правилами, без ошибок.
+    """
+    if path is None:
+        path = os.path.join(data_dir(), CUSTOM_RULES_FILENAME)
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+
+    custom = {}
+    for category, extensions in data.items():
+        if not isinstance(category, str) or not isinstance(extensions, list):
+            continue
+        exts = {str(ext).lower() for ext in extensions if isinstance(ext, str)}
+        if category and exts:
+            custom[category] = exts
+    return custom
+
+
+def build_lookup():
+    """Карта «расширение -> категория» с учётом пользовательских правил.
+
+    Пользовательские правила применяются после стандартных и могут
+    переопределять стандартные категории.
+    """
+    lookup = {}
     for category, extensions in CATEGORIES.items():
-        if extension in extensions:
-            return category
-    return OTHER_CATEGORY
+        for extension in extensions:
+            lookup[extension] = category
+    for category, extensions in load_custom_categories().items():
+        for extension in extensions:
+            lookup[extension] = category
+    return lookup
+
+
+def get_category(filename, lookup=None):
+    """Вернуть категорию файла по его расширению (без учёта регистра)."""
+    if lookup is None:
+        lookup = build_lookup()
+    return lookup.get(get_extension(filename), OTHER_CATEGORY)

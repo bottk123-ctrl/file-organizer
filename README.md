@@ -47,6 +47,8 @@ touches anything and a one-click **undo**.
 - Big folders stay responsive: sorting runs in a background thread and shows live
   progress (`N of M`).
 - `--json` output for the command line, handy for scripts and the task scheduler.
+- Custom categories: drop a `categories.json` next to the history file (see below)
+  to add your own extensions or override the built-ins — no code changes needed.
 - Error handling: locked files and access issues never crash the app.
 - Dark theme with a blue accent.
 
@@ -119,7 +121,6 @@ python main.py --undo                              # отменить после
 ```
 
 Exit code `0` means success, `1` means an error or a failed undo.
-
 Add `--json` to get a machine-readable result instead of text (with a real sort,
 `--yes` is required as well):
 
@@ -131,6 +132,22 @@ python main.py --undo --json
 
 The JSON contains `mode`, the moved files with their categories, counters and an
 `errors` list.
+
+## Custom categories
+
+Create `categories.json` in the app data folder (`%LOCALAPPDATA%\FileOrganizer`,
+or set `FILE_ORGANIZER_DATA_DIR`) and list extensions per category:
+
+```json
+{
+  "Музыка": [".flp", ".alp"],
+  "Мои картинки": [".jpg", ".png"]
+}
+```
+
+Existing categories gain the extra extensions; you can also invent new category
+names. Rules from this file are applied after the built-ins, so they win on
+conflicts. A missing or broken file is ignored silently.
 
 ## 🧪 Tests
 

@@ -2,7 +2,7 @@ import os
 import shutil
 from collections import Counter
 
-from core.rules import get_category, is_ignored
+from core.rules import get_category, is_ignored, build_lookup
 
 
 class SortPlan:
@@ -68,8 +68,10 @@ def unique_destination(target_dir, name):
         counter += 1
 
 
-def plan_sort(folder):
+def plan_sort(folder, lookup=None):
     plan = SortPlan()
+    if lookup is None:
+        lookup = build_lookup()
 
     if not folder or not os.path.isdir(folder):
         plan.errors.append("Папка не найдена.")
@@ -88,7 +90,7 @@ def plan_sort(folder):
             continue
 
         path = os.path.join(folder, name)
-        category = get_category(name)
+        category = get_category(name, lookup)
         target_dir = os.path.join(folder, category)
 
         destination = unique_destination(target_dir, name)

@@ -10,6 +10,18 @@ from core.history import clear_history, load_history, save_history
 from core.organizer import SortResult, plan_sort, apply_plan, undo_sort
 
 
+# Сколько строк предпросмотра показывать в окне, чтобы не подвесить интерфейс.
+PREVIEW_LIMIT = 500
+
+
+def _capped_preview(lines):
+    """Показать первые строки и сообщить, сколько скрыто."""
+    if len(lines) <= PREVIEW_LIMIT:
+        return "\n".join(lines)
+    hidden = len(lines) - PREVIEW_LIMIT
+    return "\n".join(lines[:PREVIEW_LIMIT]) + f"\n... и ещё {hidden} файл(ов)"
+
+
 class App(ctk.CTk):
     def __init__(self):
         ctk.set_appearance_mode(config.APPEARANCE_MODE)
@@ -138,15 +150,27 @@ class App(ctk.CTk):
         if folder is None:
             return
 
-        plan = plan_sort(folder)
+        self._set_busy(True)
+        self.status_label.configure(text="Предпросмотр...")
+        threading.Thread(target=self._preview_worker, args=(folder,), daemon=True).start()
+        self.after(100, self._poll_progress)
 
-        if plan.moves:
-            preview = "\n".join(
-                f"{os.path.basename(src)}  →  {os.path.basename(os.path.dirname(dst))}"
-                for src, dst in plan.moves
-            )
-        else:
-            preview = "Нет файлов для перемещения."
+    def _preview_worker(self, folder):
+        try:
+            plan = plan_sort(folder)
+        except Exception as exc:  # noqa: BLE001 - показываем пользователю любую ошибку
+            self._progress_queue.put(("error", exc))
+            return
+        self._progress_queue.put(("preview_done", plan))
+
+    def _preview_done(self, plan):
+        self._set_busy(False)
+
+        lines = [
+            f"{os.path.basename(src)}  →  {os.path.basename(os.path.dirname(dst))}"
+            for src, dst in plan.moves
+        ]
+        preview = _capped_preview(lines) if lines else "Нет файлов для перемещения."
 
         if plan.errors:
             preview += "\n\nОшибки:\n" + "\n".join(plan.errors)
@@ -202,6 +226,9 @@ class App(ctk.CTk):
                 elif kind == "done":
                     finished = True
                     self._sort_done(payload)
+                elif kind == "preview_done":
+                    finished = True
+                    self._preview_done(payload)
                 else:
                     finished = True
                     self._sort_failed(payload)
@@ -230,12 +257,11 @@ class App(ctk.CTk):
         messagebox.showerror(config.APP_NAME, f"Непредвиденная ошибка:\n{exc}")
 
     def _result_preview(self, result):
-        if result.moved_paths:
-            return "\n".join(
-                f"{os.path.basename(src)}  →  {os.path.basename(os.path.dirname(dst))}"
-                for src, dst in result.moved_paths
-            )
-        return "Нет файлов для перемещения."
+        lines = [
+            f"{os.path.basename(src)}  →  {os.path.basename(os.path.dirname(dst))}"
+            for src, dst in result.moved_paths
+        ]
+        return _capped_preview(lines) if lines else "Нет файлов для перемещения."
 
     def undo_files(self):
         if not self.last_result:
